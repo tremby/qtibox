@@ -1,3 +1,12 @@
+# QTIBox
+# Edshare plugin to allow QTI items to be previewed
+
+# ------------------------------------------------------------------------------
+# (c) 2010 JISC-funded EASiHE project, University of Southampton
+# Licensed under the Creative Commons 'Attribution non-commercial share alike' 
+# licence -- see the LICENCE file for more details
+# ------------------------------------------------------------------------------
+
 package EPrints::Plugin::Screen::EPrint::Box::QTIBox;
 
 use EPrints::Plugin::Screen::EPrint::Box;
