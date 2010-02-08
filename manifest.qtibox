@@ -1,4 +1,7 @@
-qtibox.manifest
+manifest.qtibox
+README.qtibox
+AUTHOR.qtibox
+LICENCE.qtibox
 cgi/qtibox_playitem
 cfg/plugins/EPrints/Plugin/Screen/EPrint/Box/QTIBox.pm
 cfg/static/javascript/auto/qtibox.js

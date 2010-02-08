@@ -14,12 +14,13 @@ REQUIREMENTS
 
 INSTALLATION
 
-The files should be extracted to <eprintsroot>/archives/<archivename>/ and then 
-a symlink to the cgi/qtibox_playitem file added to the <eprintsroot>/cgi 
-directory.
+Run the supplied script package.sh, which produces a tarball. Extract this in 
+<eprintsroot>/archives/<archivename>/ and then add a symlink to the 
+cgi/qtibox_playitem file in the <eprintsroot>/cgi directory.
 
-It's safe to extract all files but in fact only those listed in the file 
-qtibox.manifest are required.
+It's then necessary to regenerate the abstracts for existing EPrints by running, 
+from the <eprintsroot> directory
+	bin/generate_abstracts <archivename>
 
 CONFIGURATION
 
@@ -36,7 +37,8 @@ of the box with an iframe pointing to QTIEngine's preview.
 
 CAVEATS
 
-Only the first document of each EPrint is currently considered.
+-	Only the first document of each EPrint is currently considered.
+-	It's ugly.
 
 COPYRIGHT
 
