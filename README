@@ -1,3 +1,52 @@
-These files should be extracted to <eprintsroot>/archives/<archivename>/ and 
-then a symlink to the cgi/qtibox_playitem file added to the <eprintsroot>/cgi 
+NAME
+
+QTIBox
+
+SUMMARY
+
+A plugin for Edshare which allows QTI items to be previewed.
+
+REQUIREMENTS
+
+-	An Edshare (or possibly EPrints) installation.
+-	An instance of QTIEngine to call (uses the demonstration version at 
+	qtiengine.qtitools.org by default)
+
+INSTALLATION
+
+The files should be extracted to <eprintsroot>/archives/<archivename>/ and then 
+a symlink to the cgi/qtibox_playitem file added to the <eprintsroot>/cgi 
 directory.
+
+It's safe to extract all files but in fact only those listed in the file 
+qtibox.manifest are required.
+
+CONFIGURATION
+
+No configuration should be necessary but the host of the QTIEngine instance to 
+be called can be changed by altering the variable near the top of the 
+cgi/qtibox_playitem file.
+
+USAGE
+
+The box appears on the abstract page of any EPrint whose first document is seen 
+to be a valid QTI XML file or QTI content package. Clicking the "play item" 
+button uploads the item to the QTIEngine instance and then replaces the contents 
+of the box with an iframe pointing to QTIEngine's preview.
+
+CAVEATS
+
+Only the first document of each EPrint is currently considered.
+
+COPYRIGHT
+
+(c) 2010 JISC-funded EASiHE project, University of Southampton
+
+LICENCE
+
+Licensed under the Creative Commons 'Attribution non-commercial share alike' 
+licence -- see the LICENCE file for more details
+
+AUTHOR
+
+Bart Nagel <bjn@ecs.soton.ac.uk>
