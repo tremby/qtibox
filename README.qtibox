@@ -6,6 +6,10 @@ SUMMARY
 
 A plugin for Edshare which allows QTI items to be previewed.
 
+SOURCE
+
+The source is available at <http://github.com/tremby/qtibox>.
+
 REQUIREMENTS
 
 -	An Edshare (or possibly EPrints) installation.
@@ -39,6 +43,10 @@ CAVEATS
 
 -	Only the first document of each EPrint is currently considered.
 -	It's ugly.
+
+BUGS
+
+Bugs should be reported at <http://github.com/tremby/qtibox/issues>.
 
 COPYRIGHT
 
