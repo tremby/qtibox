@@ -25,7 +25,7 @@ sub new {
 	if ($class ne "EPrints::Plugin::Screen::EPrint::Box") {
 		$self->{appears} = [
 			{
-				place		=>	"summary_bottom",
+				place		=>	"summary_top",
 				position	=>	1000,
 			},
 		];
