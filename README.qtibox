@@ -12,7 +12,7 @@ The source is available at <http://github.com/tremby/qtibox>.
 
 REQUIREMENTS
 
--	An Edshare (or possibly EPrints) installation.
+-	An Edshare installation
 -	An instance of QTIEngine to call (uses the demonstration version at 
 	qtiengine.qtitools.org by default)
 
@@ -34,10 +34,14 @@ cgi/qtibox_playitem file.
 
 USAGE
 
-The box appears on the abstract page of any EPrint whose first document is seen 
-to be a valid QTI XML file or QTI content package. Clicking the "play item" 
-button uploads the item to the QTIEngine instance and then replaces the contents 
-of the box with an iframe pointing to QTIEngine's preview.
+A box appears on the abstract page of any EPrint whose first document is seen to 
+be a valid QTI XML file or QTI content package. Clicking the "play item" button 
+uploads the item to the QTIEngine instance and then replaces the contents of the 
+box with an iframe pointing to QTIEngine's preview.
+
+Another box appears on the abstract page of any EPrint collection, at least one 
+of whose EPrints' first documents is seen to be a valid QTI assessment item file 
+or single-item QTI content package. At present, however,  this box does nothing.
 
 CAVEATS
 

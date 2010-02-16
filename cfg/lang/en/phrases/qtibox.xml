@@ -3,4 +3,5 @@
 
 <epp:phrases xmlns="http://www.w3.org/1999/xhtml" xmlns:epp="http://eprints.org/ep3/phrase">
 	<epp:phrase id="Plugin/Screen/EPrint/Box/QTIBox:title">QTI tools</epp:phrase>
+	<epp:phrase id="Plugin/Screen/EPrint/Box/QTIBoxCollection:title">QTI tools</epp:phrase>
 </epp:phrases>

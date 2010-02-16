@@ -4,5 +4,7 @@ AUTHOR.qtibox
 LICENCE.qtibox
 cgi/qtibox_playitem
 cfg/plugins/EPrints/Plugin/Screen/EPrint/Box/QTIBox.pm
+cfg/plugins/EPrints/Plugin/Screen/EPrint/Box/QTIBoxCollection.pm
+cfg/plugins/EPrints/Plugin/QTIBoxUtils.pm
 cfg/static/javascript/auto/qtibox.js
 cfg/lang/en/phrases/qtibox.xml

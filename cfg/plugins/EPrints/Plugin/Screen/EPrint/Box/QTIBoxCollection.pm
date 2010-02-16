@@ -7,7 +7,7 @@
 # licence -- see the LICENCE file for more details
 # ------------------------------------------------------------------------------
 
-package EPrints::Plugin::Screen::EPrint::Box::QTIBox;
+package EPrints::Plugin::Screen::EPrint::Box::QTIBoxCollection;
 
 use EPrints::Plugin::Screen::EPrint::Box;
 @ISA = ('EPrints::Plugin::Screen::EPrint::Box');
@@ -40,20 +40,8 @@ sub render {
 	my $session = $self->{session};
 	my $eprint = $self->{processor}->{eprint};
 
-	my @documents = $eprint->get_all_documents();
-	if (!scalar @documents) {
-		return 0;
-	}
-	my $document = $documents[0];
-
-	my $div = $session->make_element("div", "id" => "qtibox_document_" . $document->get_id());
-	my $button = $session->make_element("input",
-		"class"		=>	"ep_form_action_button",
-		"type"		=>	"button",
-		"onclick"	=>	"qtibox_playitem(" . $document->get_id() . ")",
-		"value"		=>	"Play QTI item",
-	);
-	$div->appendChild($button);
+	my $div = $session->make_element("div", "id" => "qtibox");
+	# TODO: write this...
 
 	return $div;
 }
@@ -62,7 +50,19 @@ sub can_be_viewed {
 	my ($self) = @_;
 	my $eprint = $self->{processor}->{eprint};
 
-	return EPrints::Plugin::QTIBoxUtils::contains_qti($self->{session}, $eprint->get_id(), 0);
+	if ($eprint->get_value("type") ne "collection") {
+		return 0;
+	}
+
+	# if any of the EPrints in the collection have QTI, the box should be 
+	# visible. pass 1 to contains_qti to say "single items only"
+	for my $eprintid(@{$eprint->get_relation_ids}) {
+		if (EPrints::Plugin::QTIBoxUtils::contains_qti($self->{session}, $eprintid, 1)) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 1;
