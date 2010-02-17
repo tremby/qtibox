@@ -14,7 +14,6 @@ use EPrints;
 use HTTP::Request::Common;
 use LWP::UserAgent;
 use Data::Dumper;
-use Archive::Zip;
 use EPrints::Plugin::QTIBoxUtils;
 
 my $qtiengine_host = "qtiengine.qtitools.org";

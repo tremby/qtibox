@@ -14,7 +14,6 @@ use EPrints::Plugin::Screen::EPrint::Box;
 
 use strict;
 
-use Archive::Zip;
 use EPrints::Plugin::QTIBoxUtils;
 
 sub new {
