@@ -8,6 +8,7 @@
 # ------------------------------------------------------------------------------
 
 package EPrints::Plugin::QTIBoxUtils;
+use Archive::Zip;
 
 sub new {
 }
@@ -168,8 +169,8 @@ sub qti_get_xml {
 			@array = @tests;
 		}
 
-		if ($array != 1) {
-			print STDERR "qtibox: wanted an assessment item or test, expected 1 to be present, found $array\n";
+		if (scalar(@array) != 1) {
+			print STDERR "qtibox: wanted an assessment item or test, expected 1 to be present, found " . scalar($array) . "\n";
 			return 0;
 		}
 

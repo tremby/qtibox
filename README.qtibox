@@ -18,19 +18,22 @@ REQUIREMENTS
 
 INSTALLATION
 
-Run the supplied script package.sh, which produces a tarball. Extract this in 
-<eprintsroot>/archives/<archivename>/ and then add a symlink to the 
-cgi/qtibox_playitem file in the <eprintsroot>/cgi directory.
+Run the supplied script package.sh, which produces a tarball. Extract this in
+<eprintsroot>/archives/<archivename>/ and then add symlinks to the
+cgi/qtibox_playitem and cgi/qtibox_playitems files in the <eprintsroot>/cgi
+directory.
 
-It's then necessary to regenerate the abstracts for existing EPrints by running, 
-from the <eprintsroot> directory
+It's then necessary to restart the web server, for instance with
+	sudo /etc/init.d/httpd restart
+and then to regenerate the abstracts for existing EPrints by running from the
+<eprintsroot> directory
 	bin/generate_abstracts <archivename>
 
 CONFIGURATION
 
-No configuration should be necessary but the host of the QTIEngine instance to 
-be called can be changed by altering the variable near the top of the 
-cgi/qtibox_playitem file.
+No configuration should be necessary but the host of the QTIEngine instance to
+be called can be changed by altering the variables near the top of the
+cgi/qtibox_playitem and cgi/qtibox_playitems files.
 
 USAGE
 
