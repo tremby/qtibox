@@ -15,6 +15,7 @@ REQUIREMENTS
 -	An Edshare installation
 -	An instance of QTIEngine to call (uses the demonstration version at 
 	qtiengine.qtitools.org by default)
+-	The Perl module IO::Scalar
 
 INSTALLATION
 

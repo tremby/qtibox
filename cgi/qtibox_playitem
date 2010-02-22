@@ -38,7 +38,7 @@ if ($doc->get_value("main") =~ /\.zip$/) {
 	# if a content package, abort if it's got more than one item (or a test) 
 	# or get the single item's xml
 	my $data = EPrints::Plugin::QTIBoxUtils::qti_get_xml($doc, 1);
-	if ($data == 0) {
+	if (!defined($data)) {
 		die("qtibox: content package has more than a single item. aborting\n");
 	}
 

@@ -100,8 +100,8 @@ sub contains_qti {
 # parameters are an EPrints document object and a number
 #	1 for assessmentItem XML
 #	2 for assessmentTest XML
-# returns the requested XML or 0 if it's not found. when looking for an
-# assessmentItem, 0 is returned if there is more than one (it's not a
+# returns the requested XML or undef if it's not found. when looking for an 
+# assessmentItem, undef is also returned if there is more than one (it's not a 
 # single-item content package)
 sub qti_get_xml {
 	my ($doc, $type) = @_;
@@ -118,7 +118,7 @@ sub qti_get_xml {
 		if (is_qti($data) == $type) {
 			return $data;
 		}
-		return 0;
+		return undef;
 	}
 
 	if ($doc->get_value("main") =~ /\.zip$/) {
@@ -128,7 +128,7 @@ sub qti_get_xml {
 		my $manifestxml = $zip->contents("imsmanifest.xml");
 		if (!defined $manifestxml) {
 			print STDERR "qtibox: error getting manifest\n";
-			return 0;
+			return undef;
 		}
 		my $dom = eval {
 			EPrints::XML::parse_xml_string($manifestxml);
@@ -137,17 +137,17 @@ sub qti_get_xml {
 			my $err = $@;
 			$err =~ s# at /.*##;
 			print STDERR "qtibox: error parsing manifest XML\n";
-			return 0;
+			return undef;
 		}
 
 		# resources
 		my $resources = $dom->getElementsByTagName("resource");
 		if ($type == 1 && $resources->getLength > 1) {
 			# want a single item but there is more than one
-			return 0;
+			return undef;
 		} elsif ($resources->getLength == 0) {
 			print STDERR "qtibox: no resources found\n";
-			return 0;
+			return undef;
 		}
 
 		# count tests and items
@@ -171,7 +171,7 @@ sub qti_get_xml {
 
 		if (scalar(@array) != 1) {
 			print STDERR "qtibox: wanted an assessment item or test, expected 1 to be present, found " . scalar($array) . "\n";
-			return 0;
+			return undef;
 		}
 
 		# return the XML it points to
@@ -179,12 +179,12 @@ sub qti_get_xml {
 		my $xml = $zip->contents($xmlfilename);
 		if (!defined $xml) {
 			print STDERR "qtibox: error getting contents of file '$xmlfilename'\n";
-			return 0;
+			return undef;
 		}
 		return $xml;
 	}
 
-	return 0;
+	return undef;
 }
 
 1;
