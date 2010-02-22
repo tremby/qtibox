@@ -13,3 +13,8 @@ qtibox_playitem = function(docid) {
 	var div = $("qtibox_document_" + docid);
 	div.innerHTML = '<iframe src="/cgi/qtibox_playitem?docid=' + docid + '" style="width: 100%; height: 60em;" />';
 };
+
+qtibox_playitems = function(eprintid) {
+	var div = $("qtibox_eprint_" + eprintid);
+	div.innerHTML = '<iframe src="/cgi/qtibox_playitems?collectionid=' + eprintid + '" style="width: 100%; height: 60em;" />';
+};

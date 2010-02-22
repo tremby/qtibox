@@ -1,0 +1,242 @@
+#!/usr/bin/perl -w
+
+# QTIBox
+# Edshare plugin to allow QTI items to be previewed
+
+# ------------------------------------------------------------------------------
+# (c) 2010 JISC-funded EASiHE project, University of Southampton
+# Licensed under the Creative Commons 'Attribution non-commercial share alike' 
+# licence -- see the LICENCE file for more details
+# ------------------------------------------------------------------------------
+
+use strict;
+use EPrints;
+use HTTP::Request::Common;
+use LWP::UserAgent;
+use Data::Dumper;
+use Archive::Zip qw(:ERROR_CODES :CONSTANTS);
+use IO::Scalar;
+
+my $qtiengine_host = "qtiengine.qtitools.org";
+
+my $session = EPrints::Session->new();
+my $collectionid = $session->param("collectionid");
+
+if (!defined($collectionid)) {
+	exit;
+}
+
+my $collection = new EPrints::DataObj::EPrint($session, $collectionid);
+if (!defined($collection) || !$collection->is_collection()) {
+	exit;
+}
+
+# collect QTI items
+my @itemxmls = ();
+my @filenames = ();
+
+for my $eprintid(@{$collection->get_relation_ids}) {
+	if (EPrints::Plugin::QTIBoxUtils::contains_qti($session, $eprintid, 1)) {
+		my $eprint = new EPrints::DataObj::EPrint($session, $eprintid);
+		if (!defined($eprint)) {
+			return;
+		}
+
+		my @documents = $eprint->get_all_documents();
+		if (!scalar @documents) {
+			return;
+		}
+		push(@itemxmls, EPrints::Plugin::QTIBoxUtils::qti_get_xml($documents[0], 1));
+		my $filename = $documents[0]->get_value("main");
+		$filename =~ s/\.zip$/.xml/;
+		push(@filenames, $filename);
+	}
+}
+
+# build assessment test QTI-----------------------------------------------------
+
+# assessment test
+my $title = $collection->get_value("title");
+$title =~ s/</&lt;/g;
+$title =~ s/>/&gt;/g;
+$title =~ s/&/&amp;/g;
+$title =~ s/"/&quot;/g;
+$title =~ s/'/&apos;/g;
+my $assessmenttestelement = '<assessmentTest xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd" identifier="' . (my $testid = "temptest") . '" title="' . $title . '">';
+my $at = EPrints::XML::parse_xml_string('<?xml version="1.0" encoding="UTF-8"?>' . $assessmenttestelement . '</assessmentTest>');
+
+# outcome declarations
+$at->getDocumentElement()->appendChild(my $od = $session->make_element("outcomeDeclaration"));
+$od->setAttribute("cardinality", "single");
+$od->setAttribute("identifier", "outcomeIdentifier");
+$od->setAttribute("baseType", "identifier");
+$at->getDocumentElement()->appendChild($od = $session->make_element("outcomeDeclaration"));
+$od->setAttribute("cardinality", "single");
+$od->setAttribute("identifier", "SCORE");
+
+# find score's basetype -- integer if all items' scores are integers, otherwise 
+# float
+my $basetype = "integer";
+foreach my $xml (@itemxmls) {
+	# load XML
+	my $ai = EPrints::XML::parse_xml_string($xml);
+
+	# find SCORE declaration
+	my $foundscore = 0;
+	my $aiods = $ai->getElementsByTagName("outcomeDeclaration");
+	my $aiod;
+	for (my $i = 0; $i < $aiods->getLength(); $i++) {
+		$aiod = $aiods->item($i);
+		if ($aiod->getAttribute("identifier") eq "SCORE") {
+			$foundscore = 1;
+			last;
+		}
+	}
+	if (!$foundscore) {
+		die("didn't find SCORE declaration"); #TODO: do this properly
+	}
+
+	if ($aiod->getAttribute("baseType") ne "integer") {
+		$basetype = "float";
+		last;
+	}
+}
+$od->setAttribute("baseType", $basetype);
+
+# test part
+$at->getDocumentElement()->appendChild(my $tp = $session->make_element("testPart"));
+$tp->setAttribute("identifier", "P1");
+$tp->setAttribute("navigationMode", "nonlinear");
+$tp->setAttribute("submissionMode", "simultaneous");
+
+# section
+$tp->appendChild(my $as = $session->make_element("assessmentSection"));
+$as->setAttribute("identifier", "P1S1");
+$as->setAttribute("title", "All items");
+$as->setAttribute("visible", "true");
+
+# item references
+for (my $key = 0; $key < scalar(@itemxmls); $key++) {
+	$as->appendChild(my $air = $session->make_element("assessmentItemRef"));
+	$air->setAttribute("identifier", "item_$key"); #TODO: proper identifier
+	$air->setAttribute("href", "item_$key/" . $filenames[$key]);
+}
+
+# test feedback
+$at->getDocumentElement()->appendChild(my $tf = $session->make_element("testFeedback"));
+$tf->setAttribute("access", "atEnd");
+$tf->setAttribute("identifier", "outcomeValue");
+$tf->setAttribute("outcomeIdentifier", "outcomeIdentifier");
+$tf->setAttribute("showHide", "hide");
+$tf->setAttribute("title", "Test feedback");
+$tf->appendChild(my $p = $session->make_element("p"));
+$p->appendChild($session->make_text("You have finished the test. Your score follows:"));
+$tf->appendChild($p = $session->make_element("p"));
+$p->appendChild(my $pv = $session->make_element("printedVariable", "identifier" => "SCORE"));
+
+# outcome processing
+$at->getDocumentElement()->appendChild(my $op = $session->make_element("outcomeProcessing"));
+$op->appendChild(my $sov = $session->make_element("setOutcomeValue", "identifier" => "SCORE"));
+$sov->appendChild(my $s = $session->make_element("sum"));
+for (my $key = 0; $key < scalar(@itemxmls); $key++) {
+	$s->appendChild($session->make_element("variable", "identifier" => "item_$key.SCORE"));
+}
+
+# build manifest file-----------------------------------------------------------
+
+# manifest
+my $manifestelement = '<manifest xmlns="http://www.imsglobal.org/xsd/imscp_v1p1" xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_v1p2" xmlns:imsqti="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imscp_v1p1 imscp_v1p1.xsd http://www.imsglobal.org/xsd/imsmd_v1p2 imsmd_v1p2p4.xsd http://www.imsglobal.org/xsd/imsqti_v2p1  http://www.imsglobal.org/xsd/imsqti_v2p1.xsd" identifier="tempmanifest">';
+my $manifest = EPrints::XML::parse_xml_string('<?xml version="1.0" encoding="UTF-8"?>' . $manifestelement . '</manifest>');
+
+# organizations element
+$manifest->getDocumentElement()->appendChild($session->make_element("organizations"));
+
+# resources
+$manifest->getDocumentElement()->appendChild(my $rs = $session->make_element("resources"));
+
+# test resource
+$rs->appendChild(my $r = $session->make_element("resource"));
+$r->setAttribute("identifier", $testid);
+$r->setAttribute("type", "imsqti_assessment_xmlv2p1"); #TODO: use correct string which is _test_ rather than _assessment_ when my patch to QTItoolsUtils is applied
+$r->setAttribute("href", (my $testfilename = "test.xml"));
+$r->appendChild($session->make_element("file", "href" => $testfilename));
+for (my $key = 0; $key < scalar(@itemxmls); $key++) {
+	$r->appendChild($session->make_element("dependency", "identifierref" => "item_$key"));
+}
+
+# item resources
+for (my $key = 0; $key < scalar(@itemxmls); $key++) {
+	$rs->appendChild(my $r = $session->make_element("resource"));
+	$r->setAttribute("identifier", "item_$key");
+	$r->setAttribute("type", "imsqti_item_xmlv2p1");
+	$r->setAttribute("href", "item_$key/" . $filenames[$key]);
+	$r->appendChild($session->make_element("file", "href" => "item_$key/" . $filenames[$key]));
+}
+
+# make temporary zip archive----------------------------------------------------
+my $zip = Archive::Zip->new();
+
+# workarounds since the namespaces were lost by parse_xml_string (this will 
+# probably cause severe problems if we try to include metadata since those 
+# elements actually use the namespaces)
+my $manifestxml = EPrints::XML::to_string($manifest);
+$manifestxml =~ s/<manifest[^>]*?>/$manifestelement/;
+my $member = $zip->addString($manifestxml, "imsmanifest.xml");
+$member->desiredCompressionMethod(COMPRESSION_DEFLATED);
+
+my $assessmenttestxml = EPrints::XML::to_string($at);
+$assessmenttestxml =~ s/<assessmentTest[^>]*?>/$assessmenttestelement/;
+$member = $zip->addString($assessmenttestxml, $testfilename);
+$member->desiredCompressionMethod(COMPRESSION_DEFLATED);
+
+for (my $key = 0; $key < scalar(@itemxmls); $key++) {
+	$member = $zip->addString($itemxmls[$key], "item_$key/" . $filenames[$key]);
+	$member->desiredCompressionMethod(COMPRESSION_DEFLATED);
+}
+
+#$session->send_http_header("content_type" => "application/zip");
+
+my $zipContents = "";
+my $SH = IO::Scalar->new(\$zipContents);
+
+$zip->writeToFileHandle($SH);
+
+# upload content package to QTIEngine-------------------------------------------
+
+# user agent object
+my $ua = LWP::UserAgent->new();
+$ua->max_redirect(0);
+
+my $url = "/application/upload";
+my @content = [undef, "uploaded.zip", Content_Type => "application/zip", Content => $zipContents];
+
+# request object
+my $req = POST("http://" . $qtiengine_host . $url, Content_Type => "form-data", Content => [uploadedContent => @content]);
+
+# make requests until we're redirected to the preview page
+while (1) {
+	#print STDERR "sending request:\n\n";
+	#print STDERR $req->as_string();
+	my $res = $ua->request($req);
+
+	if (!$res->is_redirect()) {
+		die("Didn't get a redirection to the QTIEngine preview page. Last page was $url");
+		last;
+	}
+
+	# assuming the Location header points to something valid
+	$url = $res->header("Location");
+
+	# stop if we're at the preview page
+	if ($url =~ /^http:\/\/$qtiengine_host\/(item\/play\/0|test\/sessionplay);/) {
+		last;
+	}
+
+	# redirect
+	$req = GET($url);
+}
+
+$session->redirect($url);
+$session->terminate();
+
+exit;
