@@ -46,13 +46,20 @@ sub render {
 	my $document = $documents[0];
 
 	my $div = $session->make_element("div", "id" => "qtibox_document_" . $document->get_id());
-	my $button = $session->make_element("input",
+	$div->appendChild(my $ul = $session->make_element("ul"));
+	$ul->appendChild(my $li = $session->make_element("li"));
+	$li->appendChild($session->make_element("input",
 		"class"		=>	"ep_form_action_button",
 		"type"		=>	"button",
 		"onclick"	=>	"qtibox_playitem(" . $document->get_id() . ")",
-		"value"		=>	"Play QTI item",
-	);
-	$div->appendChild($button);
+		"value"		=>	"Play QTI item in an embedded frame",
+	));
+	$ul->appendChild($li = $session->make_element("li"));
+	$li->appendChild(my $a = $session->make_element("a",
+		"href"		=>	"/cgi/qtibox_playitem?docid=" . $document->get_id(),
+		"target"	=>	"_blank",
+	));
+	$a->appendChild($session->make_text("Play QTI item in a new window"));
 
 	return $div;
 }
